@@ -42,7 +42,7 @@ function Logo({dark=false}:{dark?:boolean}){
           <span style={{color:dark?W:N}}>SoCal</span>
           <span style={{color:B}}>Home</span>
           <span style={{color:dark?W:N}}>Plan</span>
-          <span style={{color:B,fontSize:11}}>.com</span>
+          
         </div>
         <div style={{fontSize:9,color:dark?"rgba(255,255,255,0.55)":G500}}>Home Buying Decision Engine for Southern California</div>
       </div>
