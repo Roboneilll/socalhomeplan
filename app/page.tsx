@@ -82,9 +82,9 @@ Return exactly 7 sections as: <section icon="EMOJI" title="TITLE">CONTENT</secti
 Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down Payment Strategy | Must-Have Features | Your Buying Timeline | Next Step This Week
 3-5 sentences each. Be specific, local, practical. Return ONLY the section tags.`;
     try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+      const res=await fetch("/api/generate-plan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(answers)});
       const data=await res.json();
-      const raw=(data.content as Array<{text:string}>)?.map(c=>c.text||"").join("")||"";
+      const raw=data.raw||"";
       const re=/<section icon="([^"]+)" title="([^"]+)">([\s\S]*?)<\/section>/g;
       let html="";let m;
       while((m=re.exec(raw))!==null){
