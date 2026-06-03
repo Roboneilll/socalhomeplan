@@ -75,6 +75,7 @@ export default function Home() {
 
   const generatePlan=async()=>{
     setView("plan");setLoading(true);setPlan(null);
+    fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(answers)});
     const a=answers as Record<string,unknown>;
     const prompt=`You are a licensed Southern California real estate agent. Generate a personalized home-buying plan.
 Buyer: City: ${a.city}, Budget: ${a.budget}, Down payment: ${a.downpayment}, Monthly comfort: ${a.payment}, Timeline: ${a.timeline}, Family: ${a.familysize}, First-time: ${a.firsttime}, Home type: ${a.hometype}, Features: ${((a.features as string[])||[]).join(', ')}, Concern: ${a.concern}
