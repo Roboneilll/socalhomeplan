@@ -106,7 +106,7 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
     return(
       <div style={{minHeight:"100vh",background:G50,fontFamily:"sans-serif"}}>
         <nav style={{background:N,padding:"14px 28px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <Logo dark/>
+          <span onClick={()=>setView("home")} style={{cursor:"pointer"}}><Logo dark/></span>
           <button onClick={()=>setView("home")} style={{background:"none",border:"1px solid rgba(255,255,255,0.3)",color:W,borderRadius:6,padding:"6px 14px",fontSize:12,cursor:"pointer"}}>Start Over</button>
         </nav>
         <div style={{maxWidth:620,margin:"0 auto",padding:"30px 18px 60px"}}>
@@ -208,7 +208,7 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
     <div style={{fontFamily:"sans-serif",background:W}}>
       <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet"/>
       <nav style={{background:W,borderBottom:`1px solid ${G300}`,padding:"14px 40px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:50,boxShadow:"0 1px 8px rgba(0,0,0,0.06)"}}>
-        <Logo/>
+        <span onClick={()=>setView("home")} style={{cursor:"pointer"}}><Logo/></span>
         <div style={{display:"flex",gap:24,fontSize:13,fontWeight:600}}>
           {["Home","Buyers","Areas","About","Contact"].map((item,i)=>(
             <a key={item} href="#" style={{textDecoration:"none",color:i===0?B:G700,borderBottom:i===0?`2px solid ${B}`:"none",paddingBottom:2}}>{item}</a>
