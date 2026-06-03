@@ -3,7 +3,15 @@ import { useState } from "react";
 
 const N="#0B1F4B",B="#1A56C4",LB="#EBF2FF",G50="#F8FAFC",G100="#F1F5F9",G300="#CBD5E1",G500="#64748B",G700="#334155",GR="#16A34A",W="#fff";
 
-const STEPS=[
+type Step = {
+  id: string;
+  label: string;
+  opts?: string[];
+  multi?: boolean;
+  isContact?: boolean;
+};
+
+const STEPS:Step[]=[
   {id:"budget",label:"Budget (Total Home Price)",opts:["Under $400,000","$400,000 – $500,000","$500,000 – $600,000","$600,000 – $700,000","$700,000 – $800,000","$800,000+"]},
   {id:"downpayment",label:"Down Payment",opts:["Less than 3.5% (FHA)","3.5% – 5%","5% – 10%","10% – 20%","20%+ (Conventional)","Not sure"]},
   {id:"city",label:"Desired City",opts:["Riverside","Corona","Menifee","Murrieta","Temecula","Moreno Valley","Rancho Cucamonga","Ontario","Perris","Lake Elsinore","Other"]},
@@ -15,7 +23,7 @@ const STEPS=[
   {id:"features",label:"Must-Have Features",opts:["Pool","No HOA","Good Schools","Single Story","Big Backyard","New Construction","Multi-Gen Layout","Extra Parking"],multi:true},
   {id:"concern",label:"Biggest Concern",opts:["Affording a down payment","Getting loan approved","Finding homes in budget","Competing with buyers","Understanding the process","Rising interest rates"]},
   {id:"contact",label:"Get Your Free Plan",isContact:true},
-] as const;
+];
 
 const AREAS=[
   {name:"Riverside",price:"$585,000",img:"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&q=80"},
@@ -45,7 +53,7 @@ function Logo({dark=false}:{dark?:boolean}){
 export default function Home() {
   const [view,setView]=useState("home");
   const [step,setStep]=useState(0);
-  const [answers,setAnswers]=useState<Record<string,any>>({});
+  const [answers,setAnswers]=useState<Record<string,unknown>>({});
   const [plan,setPlan]=useState<string|null>(null);
   const [loading,setLoading]=useState(false);
 
@@ -53,27 +61,30 @@ export default function Home() {
   const val=answers[current?.id];
 
   const canAdv=()=>{
-    if(current.isContact){const c=answers.contact||{};return!!(c.name?.trim()&&c.email?.trim()&&c.phone?.trim());}
-    if("multi" in current&&current.multi)return(val||[]).length>0;
+    if(current.isContact){const c=(answers.contact as Record<string,string>)||{};return!!(c.name?.trim()&&c.email?.trim()&&c.phone?.trim());}
+    if(current.multi)return((val as string[])||[]).length>0;
     return!!val;
   };
 
   const setAns=(v:string)=>setAnswers(p=>({...p,[current.id]:v}));
-  const toggleAns=(v:string)=>{const arr=val||[];setAnswers(p=>({...p,[current.id]:arr.includes(v)?arr.filter((x:string)=>x!==v):[...arr,v]}));};
-  const setContact=(k:string,v:string)=>setAnswers(p=>({...p,contact:{...(p.contact||{}),[k]:v}}));
+  const toggleAns=(v:string)=>{
+    const arr=(val as string[])||[];
+    setAnswers(p=>({...p,[current.id]:arr.includes(v)?arr.filter((x:string)=>x!==v):[...arr,v]}));
+  };
+  const setContact=(k:string,v:string)=>setAnswers(p=>({...p,contact:{...((p.contact as Record<string,string>)||{}), [k]:v}}));
 
   const generatePlan=async()=>{
     setView("plan");setLoading(true);setPlan(null);
-    const a=answers;
+    const a=answers as Record<string,unknown>;
     const prompt=`You are a licensed Southern California real estate agent. Generate a personalized home-buying plan.
-Buyer: City: ${a.city}, Budget: ${a.budget}, Down payment: ${a.downpayment}, Monthly comfort: ${a.payment}, Timeline: ${a.timeline}, Family: ${a.familysize}, First-time: ${a.firsttime}, Home type: ${a.hometype}, Features: ${(a.features||[]).join(', ')}, Concern: ${a.concern}
+Buyer: City: ${a.city}, Budget: ${a.budget}, Down payment: ${a.downpayment}, Monthly comfort: ${a.payment}, Timeline: ${a.timeline}, Family: ${a.familysize}, First-time: ${a.firsttime}, Home type: ${a.hometype}, Features: ${((a.features as string[])||[]).join(', ')}, Concern: ${a.concern}
 Return exactly 7 sections as: <section icon="EMOJI" title="TITLE">CONTENT</section>
 Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down Payment Strategy | Must-Have Features | Your Buying Timeline | Next Step This Week
 3-5 sentences each. Be specific, local, practical. Return ONLY the section tags.`;
     try{
       const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
       const data=await res.json();
-      const raw=data.content?.map((c:any)=>c.text||"").join("")||"";
+      const raw=(data.content as Array<{text:string}>)?.map(c=>c.text||"").join("")||"";
       const re=/<section icon="([^"]+)" title="([^"]+)">([\s\S]*?)<\/section>/g;
       let html="";let m;
       while((m=re.exec(raw))!==null){
@@ -90,7 +101,7 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
   const goQuiz=()=>{setView("quiz");setStep(0);setAnswers({});setPlan(null);};
 
   if(view==="plan"){
-    const name=(answers.contact?.name||"").split(" ")[0]||"there";
+    const name=((answers.contact as Record<string,string>)?.name||"").split(" ")[0]||"there";
     return(
       <div style={{minHeight:"100vh",background:G50,fontFamily:"sans-serif"}}>
         <nav style={{background:N,padding:"14px 28px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -101,7 +112,7 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
           <div style={{background:`linear-gradient(135deg,${N},${B})`,borderRadius:16,padding:"26px 24px",marginBottom:18,color:W}}>
             <div style={{fontSize:10,letterSpacing:2,color:"#93C5FD",marginBottom:5,textTransform:"uppercase"}}>SoCalHomePlan.com</div>
             <h2 style={{margin:"0 0 5px",fontSize:20,fontFamily:"'Montserrat',sans-serif",fontWeight:800}}>{name}&apos;s Home Buying Plan</h2>
-            <p style={{margin:0,fontSize:12,opacity:0.7}}>{answers.city} · {answers.budget} · {answers.timeline}</p>
+            <p style={{margin:0,fontSize:12,opacity:0.7}}>{answers.city as string} · {answers.budget as string} · {answers.timeline as string}</p>
           </div>
           {loading?(
             <div style={{textAlign:"center",padding:40}}>
@@ -128,6 +139,7 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
   if(view==="quiz"){
     const pct=Math.round(((step+1)/STEPS.length)*100);
     const isLast=step===STEPS.length-1;
+    const contactVals=(answers.contact as Record<string,string>)||{};
     return(
       <div style={{minHeight:"100vh",background:G50,fontFamily:"sans-serif"}}>
         <nav style={{background:N,padding:"14px 28px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -152,24 +164,29 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
               <div style={{background:LB,border:"1px solid #BFDBFE",borderRadius:10,padding:"12px 16px",fontSize:13,color:N}}>
                 🏡 Your personalized AI home-buying plan is ready. Enter your info below.
               </div>
-              {([["name","Full Name","text","Jane Smith"],["phone","Phone Number","tel","951-212-6116"],["email","Email Address","email","jane@email.com"]] as const).map(([k,label,type,ph])=>(
-                <div key={k}>
-                  <label style={{fontSize:13,fontWeight:700,color:N,display:"block",marginBottom:4}}>{label}</label>
-                  <input type={type} placeholder={ph} value={answers.contact?.[k]||""} onChange={e=>setContact(k,e.target.value)} style={{width:"100%",padding:"12px 13px",border:`1.5px solid ${G300}`,borderRadius:8,fontSize:14,boxSizing:"border-box"}}/>
-                </div>
-              ))}
+              {(["name","phone","email"] as const).map((k)=>{
+                const labels={name:"Full Name",phone:"Phone Number",email:"Email Address"};
+                const types={name:"text",phone:"tel",email:"email"};
+                const placeholders={name:"Jane Smith",phone:"951-212-6116",email:"jane@email.com"};
+                return(
+                  <div key={k}>
+                    <label style={{fontSize:13,fontWeight:700,color:N,display:"block",marginBottom:4}}>{labels[k]}</label>
+                    <input type={types[k]} placeholder={placeholders[k]} value={contactVals[k]||""} onChange={e=>setContact(k,e.target.value)} style={{width:"100%",padding:"12px 13px",border:`1.5px solid ${G300}`,borderRadius:8,fontSize:14,boxSizing:"border-box"}}/>
+                  </div>
+                );
+              })}
               <p style={{fontSize:11,color:G500,lineHeight:1.5}}>By submitting you agree to be contacted by a licensed California real estate agent. Not a mortgage pre-approval.</p>
             </div>
-          ):"multi" in current&&current.multi?(
+          ):current.multi?(
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))",gap:8}}>
-              {current.opts.map((o:string)=>{
-                const sel=(val||[]).includes(o);
+              {(current.opts||[]).map((o:string)=>{
+                const sel=((val as string[])||[]).includes(o);
                 return<button key={o} onClick={()=>toggleAns(o)} style={{padding:"11px 14px",border:`${sel?"2":"1.5"}px solid ${sel?B:G300}`,borderRadius:10,background:sel?LB:W,color:sel?N:G700,fontWeight:sel?700:400,fontSize:13,textAlign:"left",cursor:"pointer"}}>{sel&&<span style={{color:B,marginRight:4}}>✓</span>}{o}</button>;
               })}
             </div>
           ):(
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {current.opts.map((o:string)=>{
+              {(current.opts||[]).map((o:string)=>{
                 const sel=val===o;
                 return<button key={o} onClick={()=>setAns(o)} style={{padding:"13px 16px",border:`${sel?"2":"1.5"}px solid ${sel?B:G300}`,borderRadius:10,background:sel?LB:W,color:sel?N:G700,fontWeight:sel?700:400,fontSize:14,textAlign:"left",cursor:"pointer"}}>{sel&&<span style={{color:B,marginRight:6}}>✓</span>}{o}</button>;
               })}
@@ -177,7 +194,7 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
           )}
           <div style={{display:"flex",gap:10,marginTop:26}}>
             {step>0&&<button onClick={()=>setStep(s=>s-1)} style={{padding:"12px 18px",background:"transparent",border:`1.5px solid ${G300}`,borderRadius:8,fontSize:13,cursor:"pointer",color:G700}}>← Back</button>}
-            <button onClick={()=>{if(step<STEPS.length-1)setStep(s=>s+1);else generatePlan();}} disabled={!canAdv()} style={{flex:1,padding:13,background:canAdv()?N:G300,color:W,border:"none",borderRadius:10,fontWeight:800,fontSize:14,cursor:canAdv()?"pointer":"not-allowed",fontFamily:"'Montserrat',sans-serif"}}>
+            <button onClick={()=>{if(step<STEPS.length-1)setStep(s=>s+1);else generatePlan();}} disabled={!canAdv()} style={{flex:1,padding:"13px",background:canAdv()?N:G300,color:W,border:"none",borderRadius:10,fontWeight:800,fontSize:14,cursor:canAdv()?"pointer":"not-allowed",fontFamily:"'Montserrat',sans-serif"}}>
               {isLast?"✨ Generate My Home Plan":"Continue →"}
             </button>
           </div>
@@ -198,14 +215,11 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
         </div>
         <button onClick={goQuiz} style={{padding:"10px 22px",background:N,color:W,border:"none",borderRadius:8,fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Montserrat',sans-serif"}}>Get My Free Home Plan</button>
       </nav>
-
       <section style={{position:"relative",minHeight:480,background:`linear-gradient(to right,rgba(11,31,75,0.88) 38%,rgba(11,31,75,0.25) 100%),url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1400&q=80') center/cover`,display:"flex",alignItems:"center",padding:"52px 40px",gap:32}}>
         <div style={{flex:1,maxWidth:480,color:W}}>
           <h1 style={{fontSize:38,fontWeight:900,lineHeight:1.2,margin:"0 0 16px",fontFamily:"'Montserrat',sans-serif"}}>Find Out What You Can Really Afford in Southern California</h1>
           <p style={{fontSize:15,opacity:0.88,lineHeight:1.7,margin:"0 0 28px"}}>Get your personalized AI home-buying plan in 60 seconds — built around your budget, lifestyle, and the local market.</p>
-          <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-            <button onClick={goQuiz} style={{padding:"14px 30px",background:B,color:W,border:"none",borderRadius:10,fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Montserrat',sans-serif",boxShadow:"0 4px 18px rgba(26,86,196,0.5)"}}>✨ Get My Free Home Plan</button>
-          </div>
+          <button onClick={goQuiz} style={{padding:"14px 30px",background:B,color:W,border:"none",borderRadius:10,fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Montserrat',sans-serif"}}>✨ Get My Free Home Plan</button>
           <div style={{display:"flex",gap:20,marginTop:18}}>
             {["100% Free","60 Seconds","No Obligation"].map(t=>(
               <span key={t} style={{fontSize:12,opacity:0.8,display:"flex",alignItems:"center",gap:4}}><span style={{color:"#4ADE80"}}>✓</span>{t}</span>
@@ -214,7 +228,7 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
         </div>
         <div style={{background:W,borderRadius:16,boxShadow:"0 20px 60px rgba(0,0,0,0.25)",padding:"24px 22px",width:300,flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5}}>
-            <span style={{fontSize:16}}>✨</span>
+            <span>✨</span>
             <span style={{fontWeight:800,fontSize:15,color:N,fontFamily:"'Montserrat',sans-serif"}}>AI Home Buyer Quiz</span>
           </div>
           <p style={{fontSize:11,color:G500,marginBottom:16}}>Answer a few quick questions to get your personalized home plan.</p>
@@ -232,12 +246,11 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
               </select>
             </div>
           ))}
-          <button onClick={goQuiz} style={{width:"100%",marginTop:12,padding:12,background:B,color:W,border:"none",borderRadius:9,fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Montserrat',sans-serif"}}>✨ Get My Free Home Plan</button>
+          <button onClick={goQuiz} style={{width:"100%",marginTop:12,padding:"12px",background:B,color:W,border:"none",borderRadius:9,fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Montserrat',sans-serif"}}>✨ Get My Free Home Plan</button>
           <p style={{fontSize:10,color:G500,textAlign:"center",marginTop:7}}>🔒 Your information is secure and never shared.</p>
         </div>
       </section>
-
-      <section style={{padding:"40px 40px",background:W}}>
+      <section style={{padding:"40px",background:W}}>
         <div style={{maxWidth:980,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:18}}>
           {[
             {icon:"🏠",title:"AI Home Match",desc:"Our AI analyzes thousands of homes and matches you with the best options that fit your budget, lifestyle, and goals."},
@@ -253,7 +266,6 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
           ))}
         </div>
       </section>
-
       <section style={{padding:"48px 40px",background:G50}}>
         <div style={{maxWidth:980,margin:"0 auto"}}>
           <h2 style={{textAlign:"center",fontSize:26,fontWeight:900,color:N,fontFamily:"'Montserrat',sans-serif",marginBottom:5}}>Explore Top Inland Empire Areas</h2>
@@ -274,46 +286,10 @@ Titles: Best Cities to Consider | Estimated Price Range | Your Loan Path | Down 
           </div>
         </div>
       </section>
-
-      <section style={{padding:"40px 40px",background:W}}>
-        <div style={{maxWidth:980,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",gap:40}}>
-          <div>
-            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20}}>
-              <div style={{width:58,height:58,borderRadius:"50%",background:`linear-gradient(135deg,${N},${B})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,color:W,flexShrink:0}}>👤</div>
-              <div>
-                <div style={{fontWeight:800,fontSize:15,color:N,fontFamily:"'Montserrat',sans-serif"}}>Licensed Southern California Realtor</div>
-                <div style={{fontSize:12,color:G500}}>Local Market Knowledge. Real Results.</div>
-              </div>
-            </div>
-            <div style={{padding:"13px 16px",background:LB,borderRadius:10,display:"flex",alignItems:"center",gap:12,marginTop:16}}>
-              <span style={{fontSize:18}}>📞</span>
-              <div>
-                <div style={{fontSize:14,fontWeight:800,color:N,fontFamily:"'Montserrat',sans-serif"}}>951-212-6116</div>
-                <div style={{fontSize:11,color:G500}}>Call or text anytime</div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <h3 style={{fontSize:19,fontWeight:900,color:N,fontFamily:"'Montserrat',sans-serif",marginBottom:5}}>Your Personalized Home Buying Plan</h3>
-            <p style={{fontSize:13,color:G500,marginBottom:16}}>Get a custom report with everything you need to buy with confidence.</p>
-            <div style={{border:`2px solid ${B}`,borderRadius:12,overflow:"hidden"}}>
-              <div style={{background:N,padding:"9px 14px"}}><span style={{fontSize:10,color:"#93C5FD",fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>Sample Report Preview</span></div>
-              <div style={{padding:14}}>
-                {["Your Home Price Range","Monthly Payment Breakdown","Best Cities for You","Recommended Neighborhoods","Affordability & Savings Plan","Next Steps & Timeline"].map(item=>(
-                  <div key={item} style={{fontSize:12,color:GR,marginBottom:5,fontWeight:600}}>✓ {item}</div>
-                ))}
-              </div>
-            </div>
-            <button onClick={goQuiz} style={{width:"100%",marginTop:12,padding:13,background:B,color:W,border:"none",borderRadius:10,fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"'Montserrat',sans-serif"}}>✨ Get My Free Home Plan</button>
-          </div>
-        </div>
-      </section>
-
       <footer style={{background:N,color:"rgba(255,255,255,0.55)",padding:"24px 40px",textAlign:"center",fontSize:11,lineHeight:1.8}}>
         <div style={{fontWeight:800,color:W,fontSize:14,marginBottom:4,fontFamily:"'Montserrat',sans-serif"}}>SoCalHomePlan.com</div>
         <div style={{color:"rgba(255,255,255,0.5)",fontSize:12,marginBottom:6}}>📞 951-212-6116</div>
         Licensed California Real Estate Agent · CA DRE #[Your License] · Serving Riverside County, San Bernardino County & surrounding areas<br/>
-        This website provides informational planning tools only. Not a mortgage pre-approval. All estimates are for planning purposes only.<br/>
         © 2025 SoCalHomePlan.com
       </footer>
     </div>
