@@ -82,7 +82,7 @@ export default function Home() {
       <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "Georgia, serif" }}>
         <nav style={{ background: "#0B1F4B", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span onClick={() => setView("home")} style={{ cursor: "pointer", fontWeight: 800, fontSize: 18, color: "#fff", fontFamily: "Georgia, serif" }}>
-            SoCal<span style={{ color: "#3B82F6" }}>Home</span>Plan
+            <img src="/logo1.png" alt="SoCalHomePlan" style={{ height: 52, width: "auto", display: "block" }} />
           </span>
           <button onClick={() => { setView("home"); setStep(0); setAnswers({}); setPlan(null); }} style={{ background: "none", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 6, padding: "6px 14px", fontSize: 13, cursor: "pointer" }}>Start Over</button>
         </nav>
@@ -121,7 +121,7 @@ export default function Home() {
       <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "Georgia, serif" }}>
         <nav style={{ background: "#0B1F4B", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span onClick={() => setView("home")} style={{ cursor: "pointer", fontWeight: 800, fontSize: 18, color: "#fff" }}>
-            SoCal<span style={{ color: "#3B82F6" }}>Home</span>Plan
+            <img src="/logo1.png" alt="SoCalHomePlan" style={{ height: 52, width: "auto", display: "block" }} />
           </span>
           <button onClick={() => setView("home")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 6, padding: "6px 14px", fontSize: 13, cursor: "pointer" }}>← Back</button>
         </nav>
@@ -186,7 +186,7 @@ export default function Home() {
       {/* NAV */}
       <nav style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "16px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 50 }}>
         <span onClick={() => setView("home")} style={{ cursor: "pointer", fontWeight: 800, fontSize: 20, color: "#0B1F4B" }}>
-          SoCal<span style={{ color: "#3B82F6" }}>Home</span>Plan
+          <img src="/logo1.png" alt="SoCalHomePlan" style={{ height: 52, width: "auto", display: "block" }} />
         </span>
         <span style={{ fontSize: 13, color: "#6b7280", display: "flex", alignItems: "center", gap: 6 }}>
           <span>📞</span> 951-212-6116
